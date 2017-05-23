@@ -62,12 +62,18 @@ def pytest_cmdline_preparse(config, args):
 
 
 def parse_test_name(item):
-    item_cls = str(item.cls)
-    begin = item_cls.index("'") + 1
-    end = item_cls.index("'", begin)
-    test_module_and_class = item_cls[begin:end]
-    test_module, test_class = test_module_and_class.rsplit('.', 1)
-    return test_module + ':' + test_class + '.' + item.name
+    """Returns a test name in the form package.module:[TestClass.]test_name
+
+    For example, 'example.test_module:TestStuff.test_something'
+    """
+    # e.g. 'importlib/util.py' becomes 'importlib.util'
+    module_spec = item.location[0].replace('/', '.').replace('.py', '')
+    test_name = '{module_spec}:{item_spec}'.format(
+        module_spec=module_spec,
+        # getmodpath returns 'ATestClass.a_test_method' or 'a_test_function'
+        item_spec=item.getmodpath(),
+    )
+    return test_name
 
 
 def pytest_configure(config):
